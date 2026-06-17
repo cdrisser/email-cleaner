@@ -25,7 +25,7 @@ export function extractNextEmail(text: string, from: number): { email: EmailItem
 
 export function displaySender(from: string): string {
   const nameMatch = from.match(/^(.+?)\s*<[^>]+>/);
-  if (nameMatch) return nameMatch[1].trim();
+  if (nameMatch) return nameMatch?.[1]?.trim() || '';
   const emailMatch = from.match(/<([^>]+)>/);
-  return emailMatch ? emailMatch[1] : from;
+  return emailMatch ? emailMatch?.[1] || '' : from;
 }
