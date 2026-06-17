@@ -34,9 +34,9 @@ export async function fetchInboxEmails(limit = 50): Promise<{ emails: EmailSumma
 
     const emails: EmailSummary[] = [];
     for await (const msg of client.fetch(range, { envelope: true, uid: true })) {
-      const addr = msg.envelope.from?.[0];
+      const addr = msg.envelope?.from?.[0];
       const from = addr
-        ? `${addr.name ? addr.name + " " : ""}<${addr.mailbox}@${addr.host}>`
+        ? `${addr.name ? addr.name + " " : ""}<${addr.address ?? "unknown"}>`
         : "unknown";
       emails.push({
         uid: msg.uid,
@@ -67,9 +67,9 @@ export async function fetchEmailPage(
     const clampedEnd = Math.min(seqEnd, total);
     const emails: EmailSummary[] = [];
     for await (const msg of client.fetch(`${seqStart}:${clampedEnd}`, { envelope: true, uid: true })) {
-      const addr = msg.envelope.from?.[0];
+      const addr = msg.envelope?.from?.[0];
       const from = addr
-        ? `${addr.name ? addr.name + " " : ""}<${addr.mailbox}@${addr.host}>`
+        ? `${addr.name ? addr.name + " " : ""}<${addr.address ?? "unknown"}>`
         : "unknown";
       emails.push({
         uid: msg.uid,
@@ -129,7 +129,7 @@ export async function deleteByCategory(category: string, localUids: number[]): P
     let serverUids: number[] = [];
     if (BULK_CATEGORIES.has(category)) {
       const result = await client.search(
-        { header: ["List-Unsubscribe", ""] },
+        { header: { "List-Unsubscribe": "" } },
         { uid: true }
       );
       serverUids = Array.isArray(result) ? result : [];
