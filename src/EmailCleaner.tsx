@@ -19,6 +19,7 @@ export function EmailCleaner() {
   const {
     rowStates, catStates, confirmBusy,
     nukeConfirm, setNukeConfirm, nuking, nukeResult,
+    toast,
     deleteOne, deleteSender, deleteCategory, nuke, confirmDelete,
   } = useDeleteActions({ emails, setEmails, setPhase, setDeletedCount, setError });
 
@@ -35,6 +36,7 @@ export function EmailCleaner() {
       <h2 className="email-cleaner-title">Yahoo Inbox Cleaner</h2>
 
       {error && <div className="email-error">{error}</div>}
+      {toast && <div className="toast">{toast}</div>}
 
       {phase === "previewing" && (
         <PreviewSection

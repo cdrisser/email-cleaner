@@ -290,8 +290,10 @@ body::before {
   display: none;
   gap: 0.35rem;
 }
-.email-row:hover .decision-btn { display: none; }
-.email-row:hover .row-actions  { display: flex; }
+.email-row:hover .decision-btn,
+.email-row.row-busy .decision-btn { display: none; }
+.email-row:hover .row-actions,
+.email-row.row-busy .row-actions  { display: flex; }
 .row-btn {
   padding: 0.28rem 0.6rem;
   border-radius: 5px;
@@ -539,4 +541,39 @@ body::before {
 }
 @media (prefers-reduced-motion) {
   *, ::before, ::after { animation: none !important; }
+}
+@keyframes row-exit {
+  from { opacity: 1; transform: translateX(0); max-height: 120px; }
+  to   { opacity: 0; transform: translateX(-10px); max-height: 0; margin: 0; padding: 0; }
+}
+.email-row-exiting {
+  animation: row-exit 0.28s ease forwards;
+  pointer-events: none;
+  overflow: hidden;
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(-12px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+@keyframes toast-out {
+  0%   { opacity: 1; }
+  70%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+.toast {
+  position: fixed;
+  top: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(109, 202, 138, 0.15);
+  border: 1px solid rgba(109, 202, 138, 0.35);
+  color: #6dca8a;
+  font-size: 0.88em;
+  font-weight: 500;
+  padding: 0.6rem 1.2rem;
+  border-radius: 99px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 100;
+  animation: toast-in 0.2s ease, toast-out 3.5s ease forwards;
 }

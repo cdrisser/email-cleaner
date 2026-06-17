@@ -7,7 +7,7 @@ interface Props {
   emails: EmailItem[];
   phase: Phase;
   catStates: Record<string, "loading" | "err">;
-  rowStates: Record<string, "loading" | "err">;
+  rowStates: Record<string, "loading" | "err" | "exiting">;
   confirmBusy: boolean;
   deletedCount: number;
   toggle: (uid: number) => void;
@@ -90,7 +90,7 @@ export function EmailList({
                 return (
                   <div
                     key={email.uid}
-                    className={`email-row ${email.userDecision === "delete" ? "marked-delete" : "marked-keep"}`}
+                    className={`email-row ${email.userDecision === "delete" ? "marked-delete" : "marked-keep"}${stOne === "loading" || stSender === "loading" ? " row-busy" : ""}${stOne === "exiting" ? " email-row-exiting" : ""}`}
                   >
                     <div className="email-info">
                       <div className="email-from">{email.from}</div>
@@ -119,7 +119,7 @@ export function EmailList({
                           disabled={!!stOne || !!stSender}
                           title="Delete this email"
                         >
-                          {stOne === "loading" ? <span className="spinner" /> : stOne === "err" ? "✗" : "This"}
+                          {stOne === "loading" ? <span className="spinner" /> : stOne === "err" ? "✗" : "This e-mail"}
                         </button>
                         <button
                           onClick={() => deleteSender(email)}

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import type { EmailItem, Phase } from "../types";
+import { displaySender } from "../lib/emailParsing";
 
 interface Deps {
   emails: EmailItem[];
@@ -11,12 +12,18 @@ interface Deps {
 }
 
 export function useDeleteActions({ emails, setEmails, setPhase, setDeletedCount, setError }: Deps) {
-  const [rowStates, setRowStates] = useState<Record<string, "loading" | "err">>({});
+  const [rowStates, setRowStates] = useState<Record<string, "loading" | "err" | "exiting">>({});
   const [catStates, setCatStates] = useState<Record<string, "loading" | "err">>({});
   const [confirmBusy, setConfirmBusy] = useState(false);
   const [nukeConfirm, setNukeConfirm] = useState(false);
   const [nuking, setNuking] = useState(false);
   const [nukeResult, setNukeResult] = useState<number | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3500);
+  };
 
   const clearRowErr = (key: string) =>
     setTimeout(() => setRowStates(s => { const n = { ...s }; delete n[key]; return n; }), 2500);
@@ -34,8 +41,11 @@ export function useDeleteActions({ emails, setEmails, setPhase, setDeletedCount,
         body: JSON.stringify({ uids: [email.uid] }),
       });
       if (!res.ok) throw new Error(`Delete failed: HTTP ${res.status}`);
-      setEmails(prev => prev.filter(e => e.uid !== email.uid));
-      setRowStates(s => { const n = { ...s }; delete n[key]; return n; });
+      setRowStates(s => ({ ...s, [key]: "exiting" }));
+      setTimeout(() => {
+        setEmails(prev => prev.filter(e => e.uid !== email.uid));
+        setRowStates(s => { const n = { ...s }; delete n[key]; return n; });
+      }, 280);
     } catch (err) {
       setError(String(err));
       setRowStates(s => ({ ...s, [key]: "err" }));
@@ -54,8 +64,10 @@ export function useDeleteActions({ emails, setEmails, setPhase, setDeletedCount,
         body: JSON.stringify({ from: email.from }),
       });
       if (!res.ok) throw new Error(`Delete failed: HTTP ${res.status}`);
+      const { deleted } = await res.json();
       setEmails(prev => prev.filter(e => e.from !== email.from));
       setRowStates(s => { const n = { ...s }; delete n[key]; return n; });
+      showToast(`Deleted ${deleted} email${deleted !== 1 ? "s" : ""} from ${displaySender(email.from)}`);
     } catch (err) {
       setError(String(err));
       setRowStates(s => ({ ...s, [key]: "err" }));
@@ -126,6 +138,7 @@ export function useDeleteActions({ emails, setEmails, setPhase, setDeletedCount,
   return {
     rowStates, catStates, confirmBusy,
     nukeConfirm, setNukeConfirm, nuking, nukeResult,
+    toast,
     deleteOne, deleteSender, deleteCategory, nuke, confirmDelete,
   };
 }
