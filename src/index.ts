@@ -5,7 +5,9 @@ import type { AgentStreamEvent } from "@strands-agents/sdk";
 import { fetchInboxEmails, fetchEmailPage, deleteEmailsByUid, deleteByFrom, deleteByCategory } from "./lib/imap";
 
 const PAGE_SIZE = 100;
-const BATCH_SIZE = 50;
+const PAGE_CONCURRENCY = 3;   // pages classified in parallel
+const AGENTS_PER_PAGE = 4;    // AI agents per page (PAGE_SIZE / AGENTS_PER_PAGE emails each)
+const DELETE_CONCURRENCY = 5; // senders deleted in parallel
 
 function parseEmailResults(text: string): Array<{ uid: number; from: string; recommendation: "keep" | "delete" }> {
   const results: Array<{ uid: number; from: string; recommendation: "keep" | "delete" }> = [];
@@ -196,39 +198,52 @@ const server = serve({
                 const { total } = await fetchInboxEmails(1);
                 let analyzed = 0;
 
-                // sender -> "delete" | "keep" — "keep" is sticky once set
+                // "keep" is sticky once set
                 const senderDecisions = new Map<string, "delete" | "keep">(
                   Object.entries(knownDecisions)
                 );
                 const overriddenSenders = new Set(Object.keys(knownDecisions));
 
+                const pageRanges: Array<[number, number]> = [];
                 for (let pageStart = 1; pageStart <= total; pageStart += PAGE_SIZE) {
-                  const pageEnd = Math.min(pageStart + PAGE_SIZE - 1, total);
-                  const { emails } = await fetchEmailPage(pageStart, pageEnd);
-                  if (emails.length === 0) continue;
+                  pageRanges.push([pageStart, Math.min(pageStart + PAGE_SIZE - 1, total)]);
+                }
 
-                  const [r1, r2] = await Promise.all([
-                    classifyBatch(emails.slice(0, BATCH_SIZE)),
-                    classifyBatch(emails.slice(BATCH_SIZE)),
-                  ]);
+                for (let i = 0; i < pageRanges.length; i += PAGE_CONCURRENCY) {
+                  const chunk = pageRanges.slice(i, i + PAGE_CONCURRENCY);
+                  const chunkResults = await Promise.all(chunk.map(async ([start, end]) => {
+                    const { emails } = await fetchEmailPage(start, end);
+                    if (emails.length === 0) return { emailCount: 0, results: [] as ReturnType<typeof parseEmailResults> };
+                    const batchSize = Math.ceil(emails.length / AGENTS_PER_PAGE);
+                    const slices = Array.from({ length: AGENTS_PER_PAGE }, (_, k) =>
+                      emails.slice(k * batchSize, (k + 1) * batchSize)
+                    ).filter(s => s.length > 0);
+                    const results = (await Promise.all(slices.map(classifyBatch))).flat();
+                    return { emailCount: emails.length, results };
+                  }));
 
-                  for (const r of [...r1, ...r2]) {
-                    if (overriddenSenders.has(r.from)) continue;
-                    if (senderDecisions.get(r.from) !== "keep") {
-                      senderDecisions.set(r.from, r.recommendation);
+                  for (const { emailCount, results } of chunkResults) {
+                    analyzed += emailCount;
+                    for (const r of results) {
+                      if (overriddenSenders.has(r.from)) continue;
+                      if (senderDecisions.get(r.from) !== "keep") {
+                        senderDecisions.set(r.from, r.recommendation);
+                      }
                     }
                   }
-
-                  analyzed += emails.length;
                   send({ progress: { analyzed, total, deleted: 0 } });
                 }
 
-                // Delete all confirmed-delete senders sequentially (avoids IMAP connection overload)
+                const toDelete = [...senderDecisions.entries()]
+                  .filter(([, decision]) => decision === "delete")
+                  .map(([sender]) => sender);
+
                 let deleted = 0;
-                for (const [sender, decision] of senderDecisions) {
-                  if (decision === "delete") {
-                    deleted += await deleteByFrom(sender);
-                  }
+                for (let i = 0; i < toDelete.length; i += DELETE_CONCURRENCY) {
+                  const counts = await Promise.all(
+                    toDelete.slice(i, i + DELETE_CONCURRENCY).map(s => deleteByFrom(s))
+                  );
+                  deleted += counts.reduce((a, b) => a + b, 0);
                 }
 
                 send({ done: true, summary: { analyzed, deleted } });
