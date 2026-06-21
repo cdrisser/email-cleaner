@@ -49,7 +49,6 @@ async function classifyBatch(emails: Parameters<typeof import("./Agents/EmailAge
 
 const server = serve({
   routes: {
-    // Serve index.html for all unmatched routes.
     "/*": index,
     "/api/email/scan": {
       async POST() {

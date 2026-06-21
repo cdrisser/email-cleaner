@@ -30,6 +30,7 @@ export default [
       ...tsPlugin.configs.recommended.rules,
       ...reactPlugin.configs.recommended.rules,
       ...reactHooksPlugin.configs.recommended.rules,
+      "no-empty": ["error", { allowEmptyCatch: true }],
     },
   },
   prettierConfig,

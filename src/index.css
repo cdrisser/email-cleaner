@@ -1,153 +1,288 @@
+/* ============================================================
+   BASE
+   ============================================================ */
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-}
-body {
-  margin: 0;
-  display: grid;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-  position: relative;
-}
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  opacity: 0.05;
-  background-color: rgba(68, 69, 70, 0.15);
-  background-size: 256px;
-  transform: rotate(-12deg) scale(1.35);
-  animation: slide 30s linear infinite;
-  pointer-events: none;
-}
-@keyframes slide {
-  from { background-position: 0 0; }
-  to   { background-position: 256px 224px; }
-}
-.app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-  position: relative;
-  z-index: 1;
+  color-scheme: dark;
+  color: rgba(255, 255, 255, 0.88);
 }
 
-/* Email Cleaner */
-.email-cleaner {
-  margin: 2rem auto 0;
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3.5rem 1.25rem 5rem;
+  box-sizing: border-box;
+  background-color: #07091a;
+  background-image:
+    radial-gradient(ellipse 75% 55% at 10% -5%,  rgba(124, 82, 255, 0.22) 0%, transparent 65%),
+    radial-gradient(ellipse 55% 50% at 92% 108%, rgba(56, 120, 255, 0.18) 0%, transparent 65%),
+    radial-gradient(ellipse 35% 30% at 65% 25%,  rgba(236, 72, 153, 0.06) 0%, transparent 60%);
+}
+
+/* ============================================================
+   APP SHELL
+   ============================================================ */
+.app {
   width: 100%;
   max-width: 720px;
+}
+
+/* ============================================================
+   CARD
+   ============================================================ */
+.email-cleaner {
+  background: rgba(255, 255, 255, 0.032);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 20px;
+  padding: 2rem 2.25rem 2.25rem;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 4px 8px rgba(0, 0, 0, 0.35),
+    0 28px 72px rgba(0, 0, 0, 0.5);
+  max-width: none;
+  margin: 0;
   text-align: left;
 }
+
 .email-cleaner-title {
-  font-size: 1.4em;
-  margin-bottom: 1rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0 0 1.75rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
+
+/* ============================================================
+   ERROR / STATUS
+   ============================================================ */
 .email-error {
-  background: rgba(220, 60, 60, 0.15);
-  border: 1px solid rgba(220, 60, 60, 0.4);
-  color: #ff8080;
+  background: rgba(239, 68, 68, 0.09);
+  border: 1px solid rgba(239, 68, 68, 0.28);
+  color: #fca5a5;
   padding: 0.75rem 1rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
+  border-radius: 10px;
+  margin-bottom: 1.25rem;
+  font-size: 0.88rem;
 }
+
 .email-status {
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.38);
+  font-size: 0.88rem;
   font-style: italic;
 }
+
 .scanning-inline {
-  font-size: 0.85em;
+  font-size: 0.8rem;
   font-style: italic;
+  color: rgba(255, 255, 255, 0.32);
 }
+
+/* ============================================================
+   BUTTONS — shared base
+   ============================================================ */
 .scan-button {
-  background: #fbf0df;
-  color: #1a1a1a;
+  background: linear-gradient(135deg, #7c5cf6 0%, #5a7ff5 100%);
+  color: #fff;
   border: 0;
-  padding: 0.6rem 1.6rem;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 1em;
+  padding: 0.65rem 1.75rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.92rem;
   cursor: pointer;
-  transition: 0.1s;
+  transition: box-shadow 0.15s, transform 0.15s;
+  box-shadow: 0 4px 14px rgba(124, 92, 246, 0.38);
 }
 .scan-button:hover {
-  background: #f3d5a3;
   transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(124, 92, 246, 0.55);
 }
+.scan-button:active { transform: translateY(0); }
+
+.cancel-button {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  padding: 0.55rem 1.25rem;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: border-color 0.12s, color 0.12s;
+}
+.cancel-button:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.confirm-delete-button {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: #fff;
+  border: 0;
+  padding: 0.55rem 1.5rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: box-shadow 0.15s, transform 0.15s;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.32);
+}
+.confirm-delete-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(220, 38, 38, 0.5);
+}
+.confirm-delete-button:disabled { opacity: 0.32; cursor: not-allowed; }
+
+/* ============================================================
+   IDLE ACTIONS
+   ============================================================ */
 .idle-actions {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.5rem;
 }
+
 .nuke-section {
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
-  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 1.5rem;
 }
+
 .nuke-button {
-  background: rgba(220, 60, 60, 0.15);
-  color: #ff7070;
-  border: 1px solid rgba(220, 60, 60, 0.35);
-  padding: 0.5rem 1.4rem;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 0.9em;
+  background: rgba(239, 68, 68, 0.08);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  padding: 0.55rem 1.4rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.88rem;
   cursor: pointer;
-  transition: 0.1s;
+  transition: background 0.12s, border-color 0.12s;
 }
 .nuke-button:hover:not(:disabled) {
-  background: rgba(220, 60, 60, 0.3);
-  border-color: rgba(220, 60, 60, 0.6);
+  background: rgba(239, 68, 68, 0.18);
+  border-color: rgba(239, 68, 68, 0.42);
 }
-.nuke-button:disabled {
-  cursor: not-allowed;
-}
+.nuke-button:disabled { cursor: not-allowed; }
 .nuke-button.nuke-done {
-  background: rgba(109, 202, 138, 0.12);
-  color: #6dca8a;
-  border-color: rgba(109, 202, 138, 0.3);
+  background: rgba(34, 197, 94, 0.08);
+  color: #4ade80;
+  border-color: rgba(34, 197, 94, 0.2);
   opacity: 1;
 }
-.nuke-confirm {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
+
+.nuke-confirm { display: flex; flex-direction: column; gap: 0.9rem; }
 .nuke-warning {
-  font-size: 0.88em;
-  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.86rem;
+  color: rgba(255, 255, 255, 0.5);
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.65;
 }
-.nuke-confirm-actions {
-  display: flex;
-  gap: 0.6rem;
-}
+.nuke-confirm-actions { display: flex; gap: 0.6rem; }
 .nuke-confirm-btn {
-  background: rgba(220, 60, 60, 0.8);
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
   color: #fff;
   border: 0;
-  padding: 0.45rem 1.2rem;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 0.9em;
+  padding: 0.5rem 1.25rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.88rem;
   cursor: pointer;
-  transition: 0.1s;
+  transition: box-shadow 0.15s, transform 0.15s;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
 }
-.nuke-confirm-btn:hover { background: rgb(220, 60, 60); }
+.nuke-confirm-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.48);
+}
+
+/* ============================================================
+   AUTO-CLEAN SECTION
+   ============================================================ */
+.auto-clean-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+.auto-clean-row { display: flex; gap: 0.6rem; }
+.auto-clean-button {
+  background: rgba(96, 165, 250, 0.09);
+  color: #93c5fd;
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  padding: 0.55rem 1.4rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+  align-self: flex-start;
+}
+.auto-clean-button:hover {
+  background: rgba(96, 165, 250, 0.18);
+  border-color: rgba(96, 165, 250, 0.42);
+}
+.auto-clean-button-full { opacity: 0.55; }
+.auto-clean-button-full:hover { opacity: 1; }
+.auto-clean-hint {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.25);
+  margin: 0;
+}
+
+.auto-clean-progress { display: flex; flex-direction: column; gap: 0.75rem; }
+.auto-clean-status {
+  margin: 0;
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.58);
+}
+.auto-clean-result { display: flex; flex-direction: column; gap: 1.25rem; }
+.auto-clean-result p {
+  margin: 0;
+  font-size: 0.92rem;
+  color: #4ade80;
+}
+
+/* ============================================================
+   PROGRESS BAR
+   ============================================================ */
+.progress-bar {
+  height: 4px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #7c5cf6, #60a5fa);
+  transition: width 0.4s ease;
+}
+
+/* ============================================================
+   EMAIL SUMMARY
+   ============================================================ */
 .email-summary {
   display: flex;
-  gap: 1.5rem;
-  margin-bottom: 1rem;
-  font-size: 0.95em;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.88rem;
 }
-.summary-delete { color: #ff7070; font-weight: 600; }
-.summary-keep   { color: #6dca8a; font-weight: 600; }
+.summary-delete { color: #f87171; font-weight: 600; }
+.summary-keep   { color: #4ade80; font-weight: 600; }
+
+/* ============================================================
+   EMAIL LIST + GROUPS
+   ============================================================ */
 .email-list {
   display: flex;
   flex-direction: column;
@@ -155,244 +290,226 @@ body::before {
   max-height: 60vh;
   overflow-y: auto;
   padding-right: 0.25rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
 }
+
 .category-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
 }
+
 .category-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.4rem 0.75rem;
-  border-radius: 8px 8px 0 0;
-  background: rgba(255, 255, 255, 0.04);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 0.5rem 0.85rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
-.category-header-info {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
+.category-header-info { display: flex; align-items: center; gap: 0.6rem; }
 .category-count {
-  font-size: 0.8em;
-  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.76rem;
+  color: rgba(255, 255, 255, 0.28);
 }
+
 .delete-category-btn {
-  padding: 0.25rem 0.7rem;
-  border-radius: 5px;
-  font-size: 0.75em;
+  padding: 0.22rem 0.62rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
   font-weight: 600;
-  border: 1px solid rgba(160, 80, 220, 0.35);
-  background: rgba(160, 80, 220, 0.12);
-  color: #cc88ff;
+  border: 1px solid rgba(167, 90, 240, 0.22);
+  background: rgba(167, 90, 240, 0.08);
+  color: #c084fc;
   cursor: pointer;
-  transition: 0.1s;
+  transition: background 0.12s, border-color 0.12s;
   white-space: nowrap;
 }
 .delete-category-btn:hover {
-  background: rgba(160, 80, 220, 0.28);
-  border-color: rgba(160, 80, 220, 0.6);
+  background: rgba(167, 90, 240, 0.18);
+  border-color: rgba(167, 90, 240, 0.45);
 }
+
+/* ============================================================
+   EMAIL ROWS
+   ============================================================ */
 .email-row {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.75rem 1rem;
-  border-radius: 10px;
-  border: 1px solid transparent;
-  transition: background 0.15s, border-color 0.15s;
+  padding: 0.85rem 0.85rem 0.85rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background 0.1s;
 }
-.email-row.marked-delete {
-  background: rgba(220, 60, 60, 0.1);
-  border-color: rgba(220, 60, 60, 0.25);
-}
-.email-row.marked-keep {
-  background: #1a1a1a;
-  border-color: rgba(255, 255, 255, 0.08);
-}
-.email-info {
-  flex: 1;
-  min-width: 0;
-}
+.email-row:last-child { border-bottom: none; }
+
+.email-row.marked-delete { background: rgba(239, 68, 68, 0.07); }
+.email-row.marked-keep   { background: rgba(255, 255, 255, 0.018); }
+
+.email-info { flex: 1; min-width: 0; }
 .email-from {
-  font-size: 0.8em;
-  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.76rem;
+  color: rgba(255, 255, 255, 0.38);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .email-subject {
+  font-size: 0.88rem;
   font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin: 0.15rem 0;
+  margin: 0.18rem 0;
 }
 .email-meta {
   display: flex;
   gap: 1rem;
-  font-size: 0.78em;
-  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.74rem;
+  color: rgba(255, 255, 255, 0.3);
 }
+.email-date   { white-space: nowrap; }
 .email-reason { font-style: italic; }
-.email-busy {
-  font-size: 0.85em;
-  color: rgba(255, 255, 255, 0.5);
-  font-style: italic;
-  margin-bottom: 0.5rem;
-}
-.category-badge {
-  font-size: 0.72em;
-  font-weight: 600;
-  padding: 0.1rem 0.45rem;
-  border-radius: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  background: rgba(255,255,255,0.08);
-  color: rgba(255,255,255,0.5);
-}
-.cat-promotional { background: rgba(251,140,0,0.15); color: #ffa040; }
-.cat-newsletter  { background: rgba(100,160,240,0.15); color: #80aaee; }
-.cat-social      { background: rgba(80,200,160,0.15); color: #60c8a8; }
-.cat-travel      { background: rgba(120,100,240,0.15); color: #9988ee; }
-.cat-food        { background: rgba(240,100,100,0.15); color: #ee8080; }
-.cat-financial   { background: rgba(109,202,138,0.2); color: #6dca8a; }
-.cat-personal    { background: rgba(109,202,138,0.2); color: #6dca8a; }
-.cat-automated   { background: rgba(160,160,160,0.15); color: #aaa; }
-.cat-spam        { background: rgba(220,60,60,0.2); color: #ff7070; }
+
+/* ============================================================
+   ROW CONTROLS
+   ============================================================ */
 .row-controls {
   flex-shrink: 0;
   display: flex;
   align-items: center;
 }
+
 .decision-btn {
-  padding: 0.35rem 0.9rem;
-  border-radius: 6px;
-  font-size: 0.85em;
+  padding: 0.3rem 0.85rem;
+  border-radius: 7px;
+  font-size: 0.8rem;
   font-weight: 600;
   border: 0;
   cursor: pointer;
-  transition: 0.1s;
+  transition: background 0.1s;
 }
-.btn-delete {
-  background: rgba(220, 60, 60, 0.25);
-  color: #ff8080;
-}
-.btn-delete:hover { background: rgba(220, 60, 60, 0.4); }
-.btn-keep {
-  background: rgba(109, 202, 138, 0.15);
-  color: #6dca8a;
-}
-.btn-keep:hover { background: rgba(109, 202, 138, 0.25); }
-.row-actions {
-  display: none;
-  gap: 0.35rem;
-}
+.btn-delete { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+.btn-delete:hover { background: rgba(239, 68, 68, 0.27); }
+.btn-keep   { background: rgba(34, 197, 94, 0.1);  color: #4ade80; }
+.btn-keep:hover   { background: rgba(34, 197, 94, 0.2);  }
+
+.row-actions { display: none; gap: 0.35rem; }
 .email-row:hover .decision-btn,
 .email-row.row-busy .decision-btn { display: none; }
 .email-row:hover .row-actions,
 .email-row.row-busy .row-actions  { display: flex; }
+
 .row-btn {
-  padding: 0.28rem 0.6rem;
-  border-radius: 5px;
-  font-size: 0.75em;
+  padding: 0.27rem 0.58rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
   font-weight: 600;
   border: 0;
   cursor: pointer;
   white-space: nowrap;
-  transition: 0.1s;
+  transition: background 0.1s;
 }
-.row-btn-one    { background: rgba(220,60,60,0.2); color: #ff8080; }
-.row-btn-one:hover { background: rgba(220,60,60,0.4); }
-.row-btn-sender { background: rgba(220,130,60,0.2); color: #ffaa70; }
-.row-btn-sender:hover { background: rgba(220,130,60,0.4); }
+.row-btn-one    { background: rgba(239, 68, 68, 0.14); color: #f87171; }
+.row-btn-one:hover    { background: rgba(239, 68, 68, 0.27); }
+.row-btn-sender { background: rgba(251, 146, 60, 0.12); color: #fb923c; }
+.row-btn-sender:hover { background: rgba(251, 146, 60, 0.25); }
+
+/* ============================================================
+   EMAIL ACTIONS FOOTER
+   ============================================================ */
 .email-actions {
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
-  margin-top: 1rem;
+  margin-top: 1.25rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
-.cancel-button {
-  background: transparent;
-  color: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 0.5rem 1.2rem;
-  border-radius: 8px;
-  font-size: 0.95em;
-  cursor: pointer;
-  transition: 0.1s;
+.email-done {
+  text-align: center;
+  padding: 0.75rem 0;
 }
-.cancel-button:hover { border-color: rgba(255, 255, 255, 0.4); color: #fff; }
-.confirm-delete-button {
-  background: rgba(220, 60, 60, 0.8);
-  color: #fff;
-  border: 0;
-  padding: 0.5rem 1.4rem;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 0.95em;
-  cursor: pointer;
-  transition: 0.1s;
-}
-.confirm-delete-button:hover:not(:disabled) { background: rgba(220, 60, 60, 1); }
-.confirm-delete-button:disabled { opacity: 0.35; cursor: not-allowed; }
-.email-done { text-align: center; }
 
-.preview-section {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+/* ============================================================
+   CATEGORY BADGES
+   ============================================================ */
+.category-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.1rem 0.45rem;
+  border-radius: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.42);
 }
+.cat-promotional { background: rgba(251, 146, 60,  0.12); color: #fb923c; }
+.cat-newsletter  { background: rgba(96,  165, 250, 0.12); color: #93c5fd; }
+.cat-social      { background: rgba(52,  211, 153, 0.12); color: #6ee7b7; }
+.cat-travel      { background: rgba(129, 140, 248, 0.12); color: #a5b4fc; }
+.cat-food        { background: rgba(251, 113, 133, 0.12); color: #fda4af; }
+.cat-financial   { background: rgba(52,  211, 153, 0.12); color: #6ee7b7; }
+.cat-personal    { background: rgba(52,  211, 153, 0.12); color: #6ee7b7; }
+.cat-automated   { background: rgba(148, 163, 184, 0.1);  color: #94a3b8; }
+.cat-spam        { background: rgba(239, 68,  68,  0.12); color: #f87171; }
+
+/* ============================================================
+   PREVIEW SECTION
+   ============================================================ */
+.preview-section { display: flex; flex-direction: column; gap: 1.25rem; }
 .preview-summary {
   margin: 0;
-  font-size: 0.9em;
-  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.86rem;
+  color: rgba(255, 255, 255, 0.48);
+  line-height: 1.65;
 }
-.preview-columns {
-  display: flex;
-  gap: 1rem;
-  max-height: 55vh;
-}
+
+.preview-columns { display: flex; gap: 1rem; max-height: 55vh; }
 .preview-col {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.3rem;
   overflow-y: auto;
-  padding: 0.75rem;
-  border-radius: 8px;
+  padding: 0.85rem;
+  border-radius: 12px;
   border: 1px solid transparent;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
 }
 .preview-col-delete {
-  background: rgba(220, 60, 60, 0.07);
-  border-color: rgba(220, 60, 60, 0.2);
+  background: rgba(239, 68, 68, 0.05);
+  border-color: rgba(239, 68, 68, 0.14);
 }
 .preview-col-keep {
-  background: rgba(109, 202, 138, 0.06);
-  border-color: rgba(109, 202, 138, 0.18);
+  background: rgba(34, 197, 94, 0.04);
+  border-color: rgba(34, 197, 94, 0.12);
 }
 .preview-col-header {
-  font-size: 0.75em;
+  font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.4);
-  margin-bottom: 0.35rem;
+  letter-spacing: 0.07em;
+  color: rgba(255, 255, 255, 0.32);
+  margin-bottom: 0.4rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 .preview-count {
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.2);
   text-transform: none;
   letter-spacing: 0;
 }
+
 .preview-sender {
-  padding: 0.4rem 0.5rem;
-  border-radius: 5px;
+  padding: 0.42rem 0.6rem;
+  border-radius: 7px;
   background: rgba(255, 255, 255, 0.03);
 }
 .preview-sender-row {
@@ -401,51 +518,41 @@ body::before {
   justify-content: space-between;
   gap: 0.5rem;
 }
-.preview-sender-info {
-  flex: 1;
-  min-width: 0;
-}
+.preview-sender-info { flex: 1; min-width: 0; }
 .preview-sender-name {
-  font-size: 0.82em;
+  font-size: 0.8rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.68);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .preview-toggle {
   flex-shrink: 0;
-  font-size: 0.72em;
+  font-size: 0.68rem;
   font-weight: 600;
-  padding: 0.25rem 0.6rem;
+  padding: 0.2rem 0.52rem;
   border-radius: 5px;
   border: 1px solid transparent;
   cursor: pointer;
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.45);
+  transition: background 0.1s;
 }
-.preview-toggle:hover {
-  background: rgba(255, 255, 255, 0.12);
-}
-.preview-toggle-keep {
-  color: rgb(109, 202, 138);
-  border-color: rgba(109, 202, 138, 0.3);
-}
-.preview-toggle-delete {
-  color: rgb(220, 90, 90);
-  border-color: rgba(220, 60, 60, 0.3);
-}
+.preview-toggle:hover { background: rgba(255, 255, 255, 0.1); }
+.preview-toggle-keep   { color: #4ade80; border-color: rgba(34,  197, 94, 0.22); }
+.preview-toggle-delete { color: #f87171; border-color: rgba(239, 68,  68, 0.22); }
 .preview-subject {
-  font-size: 0.75em;
-  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.26);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   font-style: italic;
 }
 .preview-empty {
-  font-size: 0.82em;
-  color: rgba(255, 255, 255, 0.25);
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.2);
   font-style: italic;
   padding: 0.4rem 0.5rem;
 }
@@ -454,78 +561,10 @@ body::before {
   gap: 0.75rem;
   justify-content: flex-end;
 }
-.auto-clean-row {
-  display: flex;
-  gap: 0.6rem;
-}
-.auto-clean-button-full {
-  opacity: 0.6;
-}
-.auto-clean-button-full:hover {
-  opacity: 1;
-}
 
-.auto-clean-section {
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
-  padding-top: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-.auto-clean-button {
-  background: rgba(100, 160, 240, 0.15);
-  color: #80aaee;
-  border: 1px solid rgba(100, 160, 240, 0.35);
-  padding: 0.5rem 1.4rem;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 0.9em;
-  cursor: pointer;
-  transition: 0.1s;
-  align-self: flex-start;
-}
-.auto-clean-button:hover {
-  background: rgba(100, 160, 240, 0.3);
-  border-color: rgba(100, 160, 240, 0.6);
-}
-.auto-clean-hint {
-  font-size: 0.8em;
-  color: rgba(255, 255, 255, 0.35);
-  margin: 0;
-}
-.auto-clean-progress {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-.auto-clean-status {
-  margin: 0;
-  font-size: 0.9em;
-  color: rgba(255, 255, 255, 0.65);
-}
-.progress-bar {
-  height: 5px;
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.08);
-  overflow: hidden;
-}
-.progress-fill {
-  height: 100%;
-  border-radius: 3px;
-  background: #80aaee;
-  transition: width 0.4s ease;
-}
-.auto-clean-result {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-.auto-clean-result p {
-  margin: 0;
-  font-size: 0.95em;
-  color: #6dca8a;
-}
-
+/* ============================================================
+   SPINNER
+   ============================================================ */
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
@@ -539,20 +578,22 @@ body::before {
   animation: spin 0.55s linear infinite;
   vertical-align: middle;
 }
-@media (prefers-reduced-motion) {
-  *, ::before, ::after { animation: none !important; }
-}
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
 @keyframes row-exit {
-  from { opacity: 1; transform: translateX(0); max-height: 120px; }
-  to   { opacity: 0; transform: translateX(-10px); max-height: 0; margin: 0; padding: 0; }
+  from { opacity: 1; max-height: 120px; }
+  to   { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; }
 }
 .email-row-exiting {
-  animation: row-exit 0.28s ease forwards;
+  animation: row-exit 0.25s ease forwards;
   pointer-events: none;
   overflow: hidden;
 }
+
 @keyframes toast-in {
-  from { opacity: 0; transform: translateX(-50%) translateY(-12px); }
+  from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
   to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 @keyframes toast-out {
@@ -565,15 +606,20 @@ body::before {
   top: 1.5rem;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(109, 202, 138, 0.15);
-  border: 1px solid rgba(109, 202, 138, 0.35);
-  color: #6dca8a;
-  font-size: 0.88em;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  color: #4ade80;
+  font-size: 0.86rem;
   font-weight: 500;
-  padding: 0.6rem 1.2rem;
+  padding: 0.55rem 1.2rem;
   border-radius: 99px;
   white-space: nowrap;
   pointer-events: none;
   z-index: 100;
+  backdrop-filter: blur(10px);
   animation: toast-in 0.2s ease, toast-out 3.5s ease forwards;
+}
+
+@media (prefers-reduced-motion) {
+  *, ::before, ::after { animation: none !important; transition: none !important; }
 }
