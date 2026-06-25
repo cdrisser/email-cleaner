@@ -1,0 +1,153 @@
+@layer shared {
+  /* ── Spinner ─────────────────────────────────────────────── */
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 0.7em;
+    height: 0.7em;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.55s linear infinite;
+    vertical-align: middle;
+  }
+
+  /* ── Progress bar ────────────────────────────────────────── */
+
+  .progress-bar {
+    height: 4px;
+    border-radius: var(--radius-full);
+    background: rgba(255 255 255 / 0.07);
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: var(--radius-full);
+    background: linear-gradient(90deg, var(--clr-amber-600), var(--clr-amber-400));
+    transition: width 0.4s var(--ease);
+  }
+
+  /* ── Primary button ──────────────────────────────────────── */
+
+  .scan-button {
+    background: linear-gradient(135deg, var(--clr-amber-600) 0%, var(--clr-amber-400) 100%);
+    color: #fff;
+    border: 0;
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: var(--text-base);
+    cursor: pointer;
+    transition: box-shadow var(--duration-base), transform var(--duration-base);
+    box-shadow: var(--shadow-btn-primary);
+  }
+
+  .scan-button:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-btn-primary-hover);
+  }
+
+  .scan-button:active {
+    transform: translateY(0);
+  }
+
+  /* ── Ghost button ────────────────────────────────────────── */
+
+  .cancel-button {
+    background: transparent;
+    color: var(--color-text-secondary);
+    border: 1px solid rgba(255 210 120 / 0.14);
+    padding: var(--space-2) var(--space-5);
+    border-radius: var(--radius-md);
+    font-size: var(--text-base);
+    cursor: pointer;
+    transition: border-color var(--duration-fast), color var(--duration-fast);
+  }
+
+  .cancel-button:hover {
+    border-color: rgba(255 210 120 / 0.28);
+    color: rgba(255 255 255 / 0.72);
+  }
+
+  /* ── Danger button ───────────────────────────────────────── */
+
+  .confirm-delete-button,
+  .nuke-confirm-btn {
+    background: linear-gradient(135deg, var(--clr-red-600) 0%, var(--clr-red-700) 100%);
+    color: #fff;
+    border: 0;
+    padding: var(--space-2) var(--space-6);
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: var(--text-base);
+    cursor: pointer;
+    transition: box-shadow var(--duration-base), transform var(--duration-base);
+    box-shadow: var(--shadow-btn-red);
+  }
+
+  .confirm-delete-button:hover:not(:disabled),
+  .nuke-confirm-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-btn-red-hover);
+  }
+
+  .confirm-delete-button:disabled {
+    opacity: 0.32;
+    cursor: not-allowed;
+  }
+
+  /* ── Auto-clean button ───────────────────────────────────── */
+
+  .auto-clean-button {
+    background: rgba(251 191 36 / 0.08);
+    color: var(--clr-amber-400);
+    border: 1px solid rgba(251 191 36 / 0.2);
+    padding: var(--space-2) var(--space-5);
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: var(--text-base);
+    cursor: pointer;
+    transition: background var(--duration-fast), border-color var(--duration-fast);
+    align-self: flex-start;
+  }
+
+  .auto-clean-button:hover {
+    background: rgba(251 191 36 / 0.15);
+    border-color: rgba(251 191 36 / 0.38);
+  }
+
+  .auto-clean-button-full {
+    opacity: 0.5;
+  }
+
+  .auto-clean-button-full:hover {
+    opacity: 1;
+  }
+
+  /* ── Auto-clean shared layout ────────────────────────────── */
+
+  .auto-clean-section {
+    border-top: 1px solid var(--color-border-subtle);
+    padding-top: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .auto-clean-progress {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .auto-clean-status {
+    margin: 0;
+    font-size: var(--text-base);
+    color: var(--color-text-secondary);
+  }
+}

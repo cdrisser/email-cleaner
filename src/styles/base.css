@@ -1,0 +1,42 @@
+@layer base {
+  *,
+  ::before,
+  ::after {
+    box-sizing: border-box;
+  }
+
+  :root {
+    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+    line-height: var(--line-height-base);
+    color-scheme: dark;
+    color: var(--color-text);
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: var(--space-8);
+    background-color: var(--color-bg);
+    background-image:
+      radial-gradient(ellipse 70% 40% at 50% -5%,  rgba(251 191 36 / 0.11) 0%, transparent 55%),
+      radial-gradient(ellipse 40% 30% at 88% 105%, rgba(217 119 6  / 0.07) 0%, transparent 50%);
+  }
+
+  .app {
+    width: 100%;
+    min-width: 480px;
+    max-width: 720px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

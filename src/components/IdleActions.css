@@ -1,0 +1,79 @@
+@layer components {
+  .idle-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .idle-actions > .scan-button {
+    padding: var(--space-3) var(--space-5);
+    font-size: var(--text-base);
+    letter-spacing: 0.01em;
+    align-self: flex-start;
+  }
+
+  /* ── Nuke section ────────────────────────────────────────── */
+
+  .nuke-section {
+    border-top: 1px solid var(--color-border-subtle);
+    padding-top: var(--space-4);
+  }
+
+  .nuke-button {
+    background: rgba(239 68 68 / 0.08);
+    color: var(--clr-red-400);
+    border: 1px solid rgba(239 68 68 / 0.2);
+    padding: var(--space-2) var(--space-5);
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: var(--text-base);
+    cursor: pointer;
+    transition: background var(--duration-fast), border-color var(--duration-fast);
+  }
+
+  .nuke-button:hover:not(:disabled) {
+    background: rgba(239 68 68 / 0.18);
+    border-color: rgba(239 68 68 / 0.42);
+  }
+
+  .nuke-button:disabled { cursor: not-allowed; }
+
+  .nuke-button.nuke-done {
+    background: rgba(34 197 94 / 0.08);
+    color: var(--clr-green-400);
+    border-color: rgba(34 197 94 / 0.2);
+    opacity: 1;
+  }
+
+  .nuke-confirm {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .nuke-warning {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    margin: 0;
+    line-height: var(--line-height-relaxed);
+  }
+
+  .nuke-confirm-actions {
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  /* ── Auto-clean row ──────────────────────────────────────── */
+
+  .auto-clean-row {
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  .auto-clean-hint {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    margin: 0;
+    overflow-wrap: break-word;
+  }
+}

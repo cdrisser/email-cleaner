@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { EmailItem, Phase } from "./types";
+import "./EmailCleaner.css";
 import { useEmailScan } from "./hooks/useEmailScan";
 import { useDeleteActions } from "./hooks/useDeleteActions";
 import { useAutoClean } from "./hooks/useAutoClean";
@@ -33,7 +34,10 @@ export function EmailCleaner() {
 
   return (
     <div className="email-cleaner">
-      <h2 className="email-cleaner-title">Yahoo Inbox Cleaner</h2>
+      <header className="email-cleaner-header">
+        <h2 className="email-cleaner-title">Yahoo Inbox Cleaner</h2>
+        <p className="email-cleaner-subtitle">Scan, review, and delete — three steps to a clean inbox.</p>
+      </header>
 
       {error && <div className="email-error">{error}</div>}
       {toast && <div className="toast">{toast}</div>}

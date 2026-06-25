@@ -1,0 +1,236 @@
+@layer components {
+  /* ── Summary bar ─────────────────────────────────────────── */
+
+  .email-summary {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+    margin-bottom: var(--space-5);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--color-border-subtle);
+    font-size: var(--text-base);
+  }
+
+  .summary-delete { color: var(--clr-red-400);  font-weight: 700; letter-spacing: -0.01em; }
+  .summary-keep   { color: var(--clr-green-400); font-weight: 700; letter-spacing: -0.01em; }
+
+  .scanning-inline {
+    font-size: var(--text-sm);
+    font-style: italic;
+    color: var(--color-text-muted);
+  }
+
+  /* ── Scrollable list ─────────────────────────────────────── */
+
+  .email-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    max-height: 60vh;
+    overflow-y: auto;
+    padding-right: var(--space-1);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255 255 255 / 0.08) transparent;
+  }
+
+  /* ── Category group ──────────────────────────────────────── */
+
+  .category-group {
+    border: 1px solid rgba(255 255 255 / 0.07);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .category-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-2) var(--space-3);
+    background: rgba(255 255 255 / 0.03);
+    border-bottom: 1px solid var(--color-border-subtle);
+  }
+
+  .category-header-info {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .category-count {
+    font-size: var(--text-xs);
+    color: var(--color-text-faint);
+  }
+
+  .delete-category-btn {
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    border: 1px solid rgba(167 90 240 / 0.22);
+    background: rgba(167 90 240 / 0.08);
+    color: var(--clr-violet-300);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background var(--duration-fast), border-color var(--duration-fast);
+  }
+
+  .delete-category-btn:hover {
+    background: rgba(167 90 240 / 0.18);
+    border-color: rgba(167 90 240 / 0.45);
+  }
+
+  /* ── Email row ───────────────────────────────────────────── */
+
+  .email-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--color-border-faint);
+    transition: background var(--duration-fast);
+  }
+
+  .email-row:last-child { border-bottom: none; }
+
+  .email-row.marked-delete {
+    background: rgba(239 68 68 / 0.06);
+    box-shadow: inset 3px 0 0 rgba(239 68 68 / 0.55);
+  }
+
+  .email-row.marked-keep {
+    background: rgba(34 197 94 / 0.06);
+    box-shadow: inset 3px 0 0 rgba(34 197 94 / 0.5);
+  }
+
+  /* ── Email metadata ──────────────────────────────────────── */
+
+  .email-info { flex: 1; min-width: 0; }
+
+  .email-from {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .email-subject {
+    font-size: var(--text-base);
+    font-weight: 500;
+    color: rgba(255 255 255 / 0.85);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: var(--space-1) 0;
+  }
+
+  .email-meta {
+    display: flex;
+    gap: var(--space-4);
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+
+  .email-date   { white-space: nowrap; }
+  .email-reason { font-style: italic; }
+
+  /* ── Row controls ────────────────────────────────────────── */
+
+  .row-controls {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .decision-btn {
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    border: 0;
+    cursor: pointer;
+    transition: background var(--duration-fast);
+  }
+
+  .btn-delete       { background: rgba(239 68 68 / 0.15); color: var(--clr-red-400); }
+  .btn-delete:hover { background: rgba(239 68 68 / 0.27); }
+  .btn-keep         { background: rgba(34 197 94 / 0.1);  color: var(--clr-green-400); }
+  .btn-keep:hover   { background: rgba(34 197 94 / 0.2); }
+
+  .row-actions { display: none; gap: var(--space-1); }
+
+  .email-row:hover .decision-btn,
+  .email-row.row-busy .decision-btn { display: none; }
+
+  .email-row:hover .row-actions,
+  .email-row.row-busy .row-actions  { display: flex; }
+
+  .row-btn {
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    border: 0;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background var(--duration-fast);
+  }
+
+  .row-btn-one          { background: rgba(239 68 68 / 0.14);  color: var(--clr-red-400); }
+  .row-btn-one:hover    { background: rgba(239 68 68 / 0.27); }
+  .row-btn-sender       { background: rgba(251 146 60 / 0.12); color: var(--clr-orange-400); }
+  .row-btn-sender:hover { background: rgba(251 146 60 / 0.25); }
+
+  /* ── Footer actions ──────────────────────────────────────── */
+
+  .email-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-3);
+    margin-top: var(--space-5);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-border-subtle);
+  }
+
+  .email-done {
+    text-align: center;
+    padding: var(--space-3) 0;
+  }
+
+  /* ── Category badges ─────────────────────────────────────── */
+
+  .category-badge {
+    font-size: var(--text-xs);
+    font-weight: 700;
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: rgba(255 255 255 / 0.07);
+    color: rgba(255 255 255 / 0.42);
+  }
+
+  .cat-promotional { background: rgba(251 146 60 / 0.12); color: var(--clr-orange-400); }
+  .cat-newsletter  { background: rgba(96  165 250 / 0.12); color: var(--clr-blue-300); }
+  .cat-social      { background: rgba(52  211 153 / 0.12); color: var(--clr-teal-300); }
+  .cat-travel      { background: rgba(129 140 248 / 0.12); color: var(--clr-indigo-300); }
+  .cat-food        { background: rgba(251 113 133 / 0.12); color: var(--clr-pink-300); }
+  .cat-financial   { background: rgba(52  211 153 / 0.12); color: var(--clr-teal-300); }
+  .cat-personal    { background: rgba(52  211 153 / 0.12); color: var(--clr-teal-300); }
+  .cat-automated   { background: rgba(148 163 184 / 0.1);  color: var(--clr-slate-400); }
+  .cat-spam        { background: rgba(239 68  68  / 0.12); color: var(--clr-red-400); }
+
+  /* ── Row exit animation ──────────────────────────────────── */
+
+  @keyframes row-exit {
+    from { opacity: 1; max-height: 120px; }
+    to   { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; }
+  }
+
+  .email-row-exiting {
+    animation: row-exit var(--duration-slow) var(--ease) forwards;
+    pointer-events: none;
+    overflow: hidden;
+  }
+}

@@ -1,0 +1,13 @@
+@layer components {
+  .auto-clean-result {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  .auto-clean-result p {
+    margin: 0;
+    font-size: var(--text-base);
+    color: var(--clr-green-400);
+  }
+}

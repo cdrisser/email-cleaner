@@ -1,3 +1,5 @@
+import "./AutoCleanSection.css";
+
 interface Props {
   autoResult: { analyzed: number; deleted: number } | null;
   autoProgress: { analyzed: number; total: number } | null;

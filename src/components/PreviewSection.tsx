@@ -1,4 +1,5 @@
 import type { PreviewResult } from "../types";
+import "./PreviewSection.css";
 import { displaySender } from "../lib/emailParsing";
 
 interface Props {

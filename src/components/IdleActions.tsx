@@ -1,3 +1,5 @@
+import "./IdleActions.css";
+
 interface Props {
   onScan: () => void;
   onPreview: () => void;

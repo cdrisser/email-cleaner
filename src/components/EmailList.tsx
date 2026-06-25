@@ -1,3 +1,4 @@
+import "./EmailList.css";
 import type { EmailItem, Phase } from "../types";
 
 const CATEGORY_ORDER = ["promotional", "newsletter", "social", "travel", "food", "automated", "spam", "financial", "personal"];
@@ -107,11 +108,6 @@ export function EmailList({
                       >
                         {email.userDecision === "delete" ? "Delete" : "Keep"}
                       </button>
-                      {email.userDecision === "keep" && (
-                        <button onClick={() => toggle(email.uid)} className="decision-btn btn-delete">
-                          Delete
-                        </button>
-                      )}
                       <div className="row-actions">
                         <button
                           onClick={() => deleteOne(email)}
