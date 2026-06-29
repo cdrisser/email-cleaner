@@ -33,7 +33,7 @@ export function EmailCleaner() {
   const showList = phase === "scanning" || phase === "reviewing" || phase === "done";
 
   return (
-    <div className="email-cleaner">
+    <div className={`email-cleaner${showList ? " email-cleaner--active" : ""}`}>
       <header className="email-cleaner-header">
         <h2 className="email-cleaner-title">Yahoo Inbox Cleaner</h2>
         <p className="email-cleaner-subtitle">Scan, review, and delete — three steps to a clean inbox.</p>
@@ -82,7 +82,6 @@ export function EmailCleaner() {
           rowStates={rowStates}
           confirmBusy={confirmBusy}
           deletedCount={deletedCount}
-          toggle={toggle}
           deleteOne={deleteOne}
           deleteSender={deleteSender}
           deleteCategory={deleteCategory}

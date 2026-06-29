@@ -31,6 +31,7 @@
     border: 1px solid transparent;
     scrollbar-width: thin;
     scrollbar-color: rgba(255 255 255 / 0.08) transparent;
+    scrollbar-gutter: stable;
   }
 
   .preview-col-delete {
@@ -43,6 +44,18 @@
     border-color: rgba(34 197 94 / 0.12);
   }
 
+  /* Stack columns vertically on mobile */
+  @media (max-width: 559px) {
+    .preview-columns {
+      flex-direction: column;
+      max-height: none;
+    }
+
+    .preview-col {
+      max-height: 38vh;
+    }
+  }
+
   .preview-col-header {
     display: flex;
     align-items: center;
@@ -53,6 +66,8 @@
     letter-spacing: 0.07em;
     color: var(--color-text-muted);
     margin-bottom: var(--space-1);
+    position: sticky;
+    top: 0;
   }
 
   .preview-count {
@@ -98,6 +113,7 @@
     cursor: pointer;
     background: rgba(255 255 255 / 0.05);
     color: var(--color-text-secondary);
+    min-height: 28px;
     transition: background var(--duration-fast);
   }
 
@@ -128,5 +144,18 @@
     display: flex;
     gap: var(--space-3);
     justify-content: flex-end;
+  }
+
+  @media (max-width: 559px) {
+    .preview-actions {
+      flex-direction: column-reverse;
+    }
+
+    .preview-actions .cancel-button,
+    .preview-actions .auto-clean-button {
+      width: 100%;
+      text-align: center;
+      min-height: 44px;
+    }
   }
 }

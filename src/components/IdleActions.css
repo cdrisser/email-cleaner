@@ -10,6 +10,14 @@
     font-size: var(--text-base);
     letter-spacing: 0.01em;
     align-self: flex-start;
+    min-height: 44px;
+  }
+
+  @media (max-width: 559px) {
+    .idle-actions > .scan-button {
+      align-self: stretch;
+      text-align: center;
+    }
   }
 
   /* ── Nuke section ────────────────────────────────────────── */
@@ -28,6 +36,7 @@
     font-weight: 600;
     font-size: var(--text-base);
     cursor: pointer;
+    min-height: 44px;
     transition: background var(--duration-fast), border-color var(--duration-fast);
   }
 
@@ -63,11 +72,40 @@
     gap: var(--space-2);
   }
 
+  @media (max-width: 559px) {
+    .nuke-button {
+      width: 100%;
+    }
+
+    .nuke-confirm-actions {
+      flex-direction: column-reverse;
+    }
+
+    .nuke-confirm-actions .cancel-button,
+    .nuke-confirm-actions .nuke-confirm-btn {
+      width: 100%;
+      text-align: center;
+      min-height: 44px;
+    }
+  }
+
   /* ── Auto-clean row ──────────────────────────────────────── */
 
   .auto-clean-row {
     display: flex;
     gap: var(--space-2);
+  }
+
+  @media (max-width: 559px) {
+    .auto-clean-row {
+      flex-direction: column;
+    }
+
+    .auto-clean-row .auto-clean-button {
+      align-self: stretch;
+      text-align: center;
+      min-height: 44px;
+    }
   }
 
   .auto-clean-hint {
