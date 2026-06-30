@@ -11,8 +11,16 @@
     font-size: var(--text-base);
   }
 
-  .summary-delete { color: var(--clr-red-400);  font-weight: 700; letter-spacing: -0.01em; }
-  .summary-keep   { color: var(--clr-green-400); font-weight: 700; letter-spacing: -0.01em; }
+  .summary-delete {
+    color: var(--clr-red-400);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .summary-keep {
+    color: var(--clr-green-400);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
 
   .scanning-inline {
     font-size: var(--text-sm);
@@ -87,7 +95,9 @@
     align-items: center;
     justify-content: center;
     gap: var(--space-1);
-    transition: background var(--duration-fast), border-color var(--duration-fast);
+    transition:
+      background var(--duration-fast),
+      border-color var(--duration-fast);
   }
 
   .delete-category-btn:hover {
@@ -107,7 +117,9 @@
     transition: background var(--duration-fast);
   }
 
-  .email-row:last-child { border-bottom: none; }
+  .email-row:last-child {
+    border-bottom: none;
+  }
 
   .email-row.marked-delete {
     background: rgba(239 68 68 / 0.06);
@@ -121,7 +133,10 @@
 
   /* ── Email metadata ──────────────────────────────────────── */
 
-  .email-info { flex: 1; min-width: 0; }
+  .email-info {
+    flex: 1;
+    min-width: 0;
+  }
 
   .email-from {
     font-size: var(--text-xs);
@@ -148,8 +163,14 @@
     color: var(--color-text-muted);
   }
 
-  .email-date   { white-space: nowrap; }
-  .email-reason { font-style: italic; overflow: hidden; text-overflow: ellipsis; }
+  .email-date {
+    white-space: nowrap;
+  }
+  .email-reason {
+    font-style: italic;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
   /* ── Row controls (desktop: hover reveal) ────────────────── */
 
@@ -175,12 +196,25 @@
     transition: background var(--duration-fast);
   }
 
-  .btn-delete       { background: rgba(239 68 68 / 0.15); color: var(--clr-red-400); }
-  .btn-delete:hover { background: rgba(239 68 68 / 0.27); }
-  .btn-keep         { background: rgba(34 197 94 / 0.1);  color: var(--clr-green-400); }
-  .btn-keep:hover   { background: rgba(34 197 94 / 0.2); }
+  .btn-delete {
+    background: rgba(239 68 68 / 0.15);
+    color: var(--clr-red-400);
+  }
+  .btn-delete:hover {
+    background: rgba(239 68 68 / 0.27);
+  }
+  .btn-keep {
+    background: rgba(34 197 94 / 0.1);
+    color: var(--clr-green-400);
+  }
+  .btn-keep:hover {
+    background: rgba(34 197 94 / 0.2);
+  }
 
-  .row-actions { display: flex; gap: var(--space-1); }
+  .row-actions {
+    display: flex;
+    gap: var(--space-1);
+  }
 
   .row-btn {
     padding: var(--space-1) var(--space-2);
@@ -198,13 +232,23 @@
   }
 
   /* Lock each button to its text width so spinner doesn't collapse it */
-  .row-btn-one      { min-width: 74px;  background: rgba(239 68 68 / 0.14);  color: var(--clr-red-400); }
-  .row-btn-sender   { min-width: 104px; background: rgba(251 146 60 / 0.12); color: var(--clr-orange-400); }
-  .row-btn-collapse { min-width: 28px;  background: rgba(255 255 255 / 0.06); color: var(--color-text-muted); }
+  .row-btn-one {
+    min-width: 74px;
+    background: rgba(239 68 68 / 0.14);
+    color: var(--clr-red-400);
+  }
+  .row-btn-sender {
+    min-width: 104px;
+    background: rgba(251 146 60 / 0.12);
+    color: var(--clr-orange-400);
+  }
 
-  .row-btn-one:hover      { background: rgba(239 68 68 / 0.27); }
-  .row-btn-sender:hover   { background: rgba(251 146 60 / 0.25); }
-  .row-btn-collapse:hover { background: rgba(255 255 255 / 0.12); color: var(--color-text-secondary); }
+  .row-btn-one:hover {
+    background: rgba(239 68 68 / 0.27);
+  }
+  .row-btn-sender:hover {
+    background: rgba(251 146 60 / 0.25);
+  }
 
   /* ── Mobile: wrap controls below email info ──────────────── */
 
@@ -278,21 +322,56 @@
     color: rgba(255 255 255 / 0.38);
   }
 
-  .cat-promotional { background: rgba(251 146 60 / 0.12); color: var(--clr-orange-400); }
-  .cat-newsletter  { background: rgba(96  165 250 / 0.12); color: var(--clr-blue-300); }
-  .cat-social      { background: rgba(52  211 153 / 0.12); color: var(--clr-teal-300); }
-  .cat-travel      { background: rgba(129 140 248 / 0.12); color: var(--clr-indigo-300); }
-  .cat-food        { background: rgba(251 113 133 / 0.12); color: var(--clr-pink-300); }
-  .cat-financial   { background: rgba(52  211 153 / 0.12); color: var(--clr-teal-300); }
-  .cat-personal    { background: rgba(52  211 153 / 0.12); color: var(--clr-teal-300); }
-  .cat-automated   { background: rgba(148 163 184 / 0.1);  color: var(--clr-slate-400); }
-  .cat-spam        { background: rgba(239 68  68  / 0.12); color: var(--clr-red-400); }
+  .cat-promotional {
+    background: rgba(251 146 60 / 0.12);
+    color: var(--clr-orange-400);
+  }
+  .cat-newsletter {
+    background: rgba(96 165 250 / 0.12);
+    color: var(--clr-blue-300);
+  }
+  .cat-social {
+    background: rgba(52 211 153 / 0.12);
+    color: var(--clr-teal-300);
+  }
+  .cat-travel {
+    background: rgba(129 140 248 / 0.12);
+    color: var(--clr-indigo-300);
+  }
+  .cat-food {
+    background: rgba(251 113 133 / 0.12);
+    color: var(--clr-pink-300);
+  }
+  .cat-financial {
+    background: rgba(52 211 153 / 0.12);
+    color: var(--clr-teal-300);
+  }
+  .cat-personal {
+    background: rgba(52 211 153 / 0.12);
+    color: var(--clr-teal-300);
+  }
+  .cat-automated {
+    background: rgba(148 163 184 / 0.1);
+    color: var(--clr-slate-400);
+  }
+  .cat-spam {
+    background: rgba(239 68 68 / 0.12);
+    color: var(--clr-red-400);
+  }
 
   /* ── Row exit animation ──────────────────────────────────── */
 
   @keyframes row-exit {
-    from { opacity: 1; max-height: 120px; }
-    to   { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; }
+    from {
+      opacity: 1;
+      max-height: 120px;
+    }
+    to {
+      opacity: 0;
+      max-height: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+    }
   }
 
   .email-row-exiting {

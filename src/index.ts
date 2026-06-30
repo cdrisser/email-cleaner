@@ -2,14 +2,23 @@ import { serve } from "bun";
 import index from "./index.html";
 import { createEmailAgent, buildClassifyPrompt } from "./Agents/EmailAgent";
 import type { AgentStreamEvent } from "@strands-agents/sdk";
-import { fetchInboxEmails, fetchEmailPage, deleteEmailsByUid, deleteByFrom, deleteByCategory } from "./lib/imap";
+import {
+  fetchInboxEmails,
+  fetchEmailPage,
+  deleteEmailsByUid,
+  deleteByFrom,
+  deleteByCategory,
+  fetchUnsubscribeHeaders,
+} from "./lib/imap";
+import { buildUnsubscribeEntry, batchUnsubscribe, type UnsubscribeEntry } from "./lib/unsubscribe";
 
 const PAGE_SIZE = 100;
-const PAGE_CONCURRENCY = 3;   // pages classified in parallel
-const AGENTS_PER_PAGE = 4;    // AI agents per page (PAGE_SIZE / AGENTS_PER_PAGE emails each)
-const DELETE_CONCURRENCY = 5; // senders deleted in parallel
+const PAGE_CONCURRENCY = 5; // pages classified in parallel
+const AGENTS_PER_PAGE = 4; // AI agents per page (PAGE_SIZE / AGENTS_PER_PAGE emails each)
 
-function parseEmailResults(text: string): Array<{ uid: number; from: string; recommendation: "keep" | "delete" }> {
+function parseEmailResults(
+  text: string
+): Array<{ uid: number; from: string; recommendation: "keep" | "delete" }> {
   const results: Array<{ uid: number; from: string; recommendation: "keep" | "delete" }> = [];
   let i = 0;
   while (i < text.length) {
@@ -19,7 +28,13 @@ function parseEmailResults(text: string): Array<{ uid: number; from: string; rec
     let end = -1;
     for (let j = start; j < text.length; j++) {
       if (text[j] === "{") depth++;
-      else if (text[j] === "}") { depth--; if (depth === 0) { end = j; break; } }
+      else if (text[j] === "}") {
+        depth--;
+        if (depth === 0) {
+          end = j;
+          break;
+        }
+      }
     }
     if (end !== -1) {
       try {
@@ -32,11 +47,15 @@ function parseEmailResults(text: string): Array<{ uid: number; from: string; rec
   return results;
 }
 
-async function classifyBatch(emails: Parameters<typeof import("./Agents/EmailAgent")["buildClassifyPrompt"]>[0]) {
+async function classifyBatch(
+  emails: Parameters<(typeof import("./Agents/EmailAgent"))["buildClassifyPrompt"]>[0]
+) {
   if (emails.length === 0) return [];
   const { createEmailAgent, buildClassifyPrompt } = await import("./Agents/EmailAgent");
   let text = "";
-  for await (const event of createEmailAgent().stream(buildClassifyPrompt(emails)) as AsyncGenerator<AgentStreamEvent>) {
+  for await (const event of createEmailAgent().stream(
+    buildClassifyPrompt(emails)
+  ) as AsyncGenerator<AgentStreamEvent>) {
     if (event.type === "modelStreamUpdateEvent") {
       const inner = event.event;
       if (inner.type === "modelContentBlockDeltaEvent" && inner.delta.type === "textDelta") {
@@ -58,15 +77,22 @@ const server = serve({
         const body = new ReadableStream({
           start(controller) {
             const send = (data: object) => {
-              try { controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`)); } catch {}
+              try {
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+              } catch {}
             };
 
             void (async () => {
               try {
-                for await (const event of createEmailAgent().stream(prompt) as AsyncGenerator<AgentStreamEvent>) {
+                for await (const event of createEmailAgent().stream(
+                  prompt
+                ) as AsyncGenerator<AgentStreamEvent>) {
                   if (event.type === "modelStreamUpdateEvent") {
                     const inner = event.event;
-                    if (inner.type === "modelContentBlockDeltaEvent" && inner.delta.type === "textDelta") {
+                    if (
+                      inner.type === "modelContentBlockDeltaEvent" &&
+                      inner.delta.type === "textDelta"
+                    ) {
                       send({ chunk: inner.delta.text });
                     }
                   }
@@ -75,7 +101,9 @@ const server = serve({
               } catch (err) {
                 send({ error: String(err) });
               } finally {
-                try { controller.close(); } catch {}
+                try {
+                  controller.close();
+                } catch {}
               }
             })();
           },
@@ -85,7 +113,7 @@ const server = serve({
           headers: {
             "Content-Type": "text/event-stream",
             "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
+            Connection: "keep-alive",
           },
         });
       },
@@ -114,29 +142,51 @@ const server = serve({
         const body = new ReadableStream({
           start(controller) {
             const send = (data: object) => {
-              try { controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`)); } catch {}
+              try {
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+              } catch {}
             };
 
             void (async () => {
               const heartbeat = setInterval(() => {
-                try { controller.enqueue(encoder.encode(": keepalive\n\n")); } catch {}
+                try {
+                  controller.enqueue(encoder.encode(": keepalive\n\n"));
+                } catch {}
               }, 8000);
 
               try {
                 const { emails, total } = await fetchInboxEmails(PREVIEW_LIMIT);
                 send({ init: { total } });
 
-                // Sequential batches — each sends progress so the connection stays active
+                // Stream per-email progress by tapping the AI text stream directly
                 const allResults = [];
                 for (let i = 0; i < emails.length; i += 50) {
-                  const batch = await classifyBatch(emails.slice(i, i + 50));
-                  allResults.push(...batch);
-                  send({ progress: { scanned: allResults.length } });
+                  const batch = emails.slice(i, i + 50);
+                  let text = "";
+                  let lastCount = 0;
+                  for await (const event of createEmailAgent().stream(buildClassifyPrompt(batch)) as AsyncGenerator<AgentStreamEvent>) {
+                    if (event.type === "modelStreamUpdateEvent") {
+                      const inner = event.event;
+                      if (inner.type === "modelContentBlockDeltaEvent" && inner.delta.type === "textDelta") {
+                        text += inner.delta.text;
+                        const partial = parseEmailResults(text);
+                        if (partial.length > lastCount) {
+                          lastCount = partial.length;
+                          send({ progress: { scanned: allResults.length + lastCount, currentSubject: batch[lastCount]?.subject } });
+                        }
+                      }
+                    }
+                  }
+                  allResults.push(...parseEmailResults(text));
                 }
+                send({ progress: { scanned: allResults.length } });
 
                 // Build sender groups (subject lookup from original email data)
-                const uidToSubject = new Map(emails.map(e => [e.uid, e.subject]));
-                const senderMap = new Map<string, { recommendation: "keep" | "delete"; subjects: string[] }>();
+                const uidToSubject = new Map(emails.map((e) => [e.uid, e.subject]));
+                const senderMap = new Map<
+                  string,
+                  { recommendation: "keep" | "delete"; subjects: string[] }
+                >();
 
                 for (const r of allResults) {
                   if (!senderMap.has(r.from)) {
@@ -151,7 +201,10 @@ const server = serve({
                 const toDelete: Array<{ from: string; subjects: string[] }> = [];
                 const toKeep: Array<{ from: string; subjects: string[] }> = [];
                 for (const [from, entry] of senderMap) {
-                  (entry.recommendation === "delete" ? toDelete : toKeep).push({ from, subjects: entry.subjects });
+                  (entry.recommendation === "delete" ? toDelete : toKeep).push({
+                    from,
+                    subjects: entry.subjects,
+                  });
                 }
 
                 send({ done: true, preview: { toDelete, toKeep, scanned: emails.length, total } });
@@ -159,7 +212,9 @@ const server = serve({
                 send({ error: String(err) });
               } finally {
                 clearInterval(heartbeat);
-                try { controller.close(); } catch {}
+                try {
+                  controller.close();
+                } catch {}
               }
             })();
           },
@@ -170,7 +225,7 @@ const server = serve({
           headers: {
             "Content-Type": "text/event-stream",
             "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
+            Connection: "keep-alive",
           },
         });
       },
@@ -185,12 +240,16 @@ const server = serve({
         const body = new ReadableStream({
           start(controller) {
             const send = (data: object) => {
-              try { controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`)); } catch {}
+              try {
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+              } catch {}
             };
 
             void (async () => {
               const heartbeat = setInterval(() => {
-                try { controller.enqueue(encoder.encode(": keepalive\n\n")); } catch {}
+                try {
+                  controller.enqueue(encoder.encode(": keepalive\n\n"));
+                } catch {}
               }, 8000);
 
               try {
@@ -208,21 +267,29 @@ const server = serve({
                   pageRanges.push([pageStart, Math.min(pageStart + PAGE_SIZE - 1, total)]);
                 }
 
+                // Collect all classified results so we can resolve delete UIDs after
+                // senderDecisions is final (keep is sticky, can flip delete→keep across pages).
+                const allResults: Array<{ uid: number; from: string }> = [];
+
                 for (let i = 0; i < pageRanges.length; i += PAGE_CONCURRENCY) {
                   const chunk = pageRanges.slice(i, i + PAGE_CONCURRENCY);
-                  const chunkResults = await Promise.all(chunk.map(async ([start, end]) => {
-                    const { emails } = await fetchEmailPage(start, end);
-                    if (emails.length === 0) return { emailCount: 0, results: [] as ReturnType<typeof parseEmailResults> };
-                    const batchSize = Math.ceil(emails.length / AGENTS_PER_PAGE);
-                    const slices = Array.from({ length: AGENTS_PER_PAGE }, (_, k) =>
-                      emails.slice(k * batchSize, (k + 1) * batchSize)
-                    ).filter(s => s.length > 0);
-                    const results = (await Promise.all(slices.map(classifyBatch))).flat();
-                    return { emailCount: emails.length, results };
-                  }));
+                  const chunkResults = await Promise.all(
+                    chunk.map(async ([start, end]) => {
+                      const { emails } = await fetchEmailPage(start, end);
+                      if (emails.length === 0)
+                        return { emailCount: 0, results: [] as ReturnType<typeof parseEmailResults> };
+                      const batchSize = Math.ceil(emails.length / AGENTS_PER_PAGE);
+                      const slices = Array.from({ length: AGENTS_PER_PAGE }, (_, k) =>
+                        emails.slice(k * batchSize, (k + 1) * batchSize)
+                      ).filter((s) => s.length > 0);
+                      const results = (await Promise.all(slices.map(classifyBatch))).flat();
+                      return { emailCount: emails.length, results };
+                    })
+                  );
 
                   for (const { emailCount, results } of chunkResults) {
                     analyzed += emailCount;
+                    allResults.push(...results.map((r) => ({ uid: r.uid, from: r.from })));
                     for (const r of results) {
                       if (overriddenSenders.has(r.from)) continue;
                       if (senderDecisions.get(r.from) !== "keep") {
@@ -233,24 +300,36 @@ const server = serve({
                   send({ progress: { analyzed, total, deleted: 0 } });
                 }
 
-                const toDelete = [...senderDecisions.entries()]
-                  .filter(([, decision]) => decision === "delete")
-                  .map(([sender]) => sender);
+                // Resolve delete UIDs now that senderDecisions is final
+                const deleteUids = allResults
+                  .filter((r) => senderDecisions.get(r.from) === "delete")
+                  .map((r) => r.uid);
 
-                let deleted = 0;
-                for (let i = 0; i < toDelete.length; i += DELETE_CONCURRENCY) {
-                  const counts = await Promise.all(
-                    toDelete.slice(i, i + DELETE_CONCURRENCY).map(s => deleteByFrom(s))
-                  );
-                  deleted += counts.reduce((a, b) => a + b, 0);
+                // Use IMAP SEARCH to find which delete-bound emails have List-Unsubscribe headers,
+                // then fetch those headers. This is more reliable than fetching during classification.
+                const headerMap = await fetchUnsubscribeHeaders(deleteUids);
+                const seenUrls = new Set<string>();
+                const unsubscribeEntries: UnsubscribeEntry[] = [];
+                for (const [, headers] of headerMap) {
+                  const entry = buildUnsubscribeEntry(headers.listUnsubscribe, headers.listUnsubscribePost);
+                  if (entry && !seenUrls.has(entry.url)) {
+                    seenUrls.add(entry.url);
+                    unsubscribeEntries.push(entry);
+                  }
                 }
+
+                send({ deletingPhase: { emailCount: deleteUids.length, unsubscribeEntries } });
+
+                const deleted = await deleteEmailsByUid(deleteUids);
 
                 send({ done: true, summary: { analyzed, deleted } });
               } catch (err) {
                 send({ error: String(err) });
               } finally {
                 clearInterval(heartbeat);
-                try { controller.close(); } catch {}
+                try {
+                  controller.close();
+                } catch {}
               }
             })();
           },
@@ -261,7 +340,7 @@ const server = serve({
           headers: {
             "Content-Type": "text/event-stream",
             "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
+            Connection: "keep-alive",
           },
         });
       },
@@ -275,6 +354,15 @@ const server = serve({
       },
     },
 
+    "/api/email/unsubscribe-batch": {
+      async POST(req) {
+        const { entries } = (await req.json()) as {
+          entries: Array<{ url: string; oneClick: boolean }>;
+        };
+        const sent = await batchUnsubscribe(entries);
+        return Response.json({ sent });
+      },
+    },
   },
 
   development: process.env.NODE_ENV !== "production" && {

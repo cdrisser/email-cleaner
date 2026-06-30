@@ -4,7 +4,7 @@ import { displaySender } from "../lib/emailParsing";
 
 interface Props {
   previewResult: PreviewResult | null;
-  previewProgress: { scanned: number; total: number } | null;
+  previewProgress: { scanned: number; total: number; currentSubject?: string } | null;
   previewOverrides: Record<string, "keep" | "delete">;
   togglePreviewSender: (from: string, agentDecision: "keep" | "delete") => void;
   autoClean: (decisions: Record<string, "keep" | "delete">) => void;
@@ -44,18 +44,32 @@ function SenderRow({ s, side, onToggle }: {
 }
 
 export function PreviewSection({ previewResult, previewProgress, previewOverrides, togglePreviewSender, autoClean, onCancel }: Props) {
+  const currentSubject = previewProgress?.currentSubject;
+
   if (!previewResult) {
+    const cap = Math.min(200, previewProgress?.total || 200);
+    const pct = previewProgress?.scanned ? Math.round((previewProgress.scanned / cap) * 100) : 0;
+
     return (
       <div className="preview-section">
         <div className="auto-clean-progress">
+          {currentSubject && (
+            <p className="preview-current-subject">
+              <span className="preview-analyzing-label">Analyzing</span>
+              {currentSubject}
+            </p>
+          )}
           <p className="auto-clean-status">
             Analyzing sample&hellip;{previewProgress && previewProgress.scanned > 0 ? ` ${previewProgress.scanned} emails scanned` : ""}
           </p>
-          <div className="progress-bar">
-            <div
-              className="progress-fill"
-              style={{ width: previewProgress?.total ? `${Math.round((previewProgress.scanned / Math.min(200, previewProgress.total)) * 100)}%` : "5%" }}
-            />
+          <div className="preview-progress-wrap">
+            <div className="progress-bar">
+              <div
+                className="progress-fill"
+                style={{ width: previewProgress?.total ? `${pct}%` : "3%" }}
+              />
+            </div>
+            {pct > 0 && <span className="preview-progress-pct">{pct}%</span>}
           </div>
         </div>
       </div>

@@ -20,7 +20,9 @@ export interface EmailSummary {
   date: string;
 }
 
-export async function fetchInboxEmails(limit = 50): Promise<{ emails: EmailSummary[]; total: number }> {
+export async function fetchInboxEmails(
+  limit = 50
+): Promise<{ emails: EmailSummary[]; total: number }> {
   const client = createImapClient();
   try {
     await client.connect();
@@ -115,9 +117,54 @@ export async function deleteByFrom(address: string): Promise<number> {
   }
 }
 
+export async function fetchUnsubscribeHeaders(
+  uids: number[]
+): Promise<Map<number, { listUnsubscribe: string; listUnsubscribePost?: string }>> {
+  if (uids.length === 0) return new Map();
+  const client = createImapClient();
+  try {
+    await client.connect();
+    await client.mailboxOpen("INBOX");
+
+    // IMAP SEARCH for emails with a List-Unsubscribe header — same technique as deleteByCategory,
+    // proven reliable with Yahoo Mail. Intersect with our delete UIDs to avoid fetching headers
+    // for everything in the inbox.
+    const withUnsub = (await client.search(
+      { header: { "List-Unsubscribe": "" } },
+      { uid: true }
+    )) as number[];
+    const targetUids = uids.filter(uid => withUnsub.includes(uid));
+    if (targetUids.length === 0) return new Map();
+
+    const result = new Map<number, { listUnsubscribe: string; listUnsubscribePost?: string }>();
+    for await (const msg of client.fetch(targetUids, {
+      uid: true,
+      headers: ["list-unsubscribe", "list-unsubscribe-post"],
+    })) {
+      const raw = msg.headers ? (msg.headers as Buffer).toString() : "";
+      const listUnsubscribe = raw.match(/^list-unsubscribe:\s*(.+)$/im)?.[1]?.trim();
+      if (listUnsubscribe) {
+        result.set(msg.uid, {
+          listUnsubscribe,
+          listUnsubscribePost: raw.match(/^list-unsubscribe-post:\s*(.+)$/im)?.[1]?.trim(),
+        });
+      }
+    }
+    return result;
+  } finally {
+    await client.logout();
+  }
+}
+
 // Categories where RFC 2369 List-Unsubscribe header is a reliable server-side signal
 const BULK_CATEGORIES = new Set([
-  "promotional", "newsletter", "social", "travel", "food", "automated", "spam",
+  "promotional",
+  "newsletter",
+  "social",
+  "travel",
+  "food",
+  "automated",
+  "spam",
 ]);
 
 export async function deleteByCategory(category: string, localUids: number[]): Promise<number> {
@@ -128,10 +175,7 @@ export async function deleteByCategory(category: string, localUids: number[]): P
 
     let serverUids: number[] = [];
     if (BULK_CATEGORIES.has(category)) {
-      const result = await client.search(
-        { header: { "List-Unsubscribe": "" } },
-        { uid: true }
-      );
+      const result = await client.search({ header: { "List-Unsubscribe": "" } }, { uid: true });
       serverUids = Array.isArray(result) ? result : [];
     }
 
