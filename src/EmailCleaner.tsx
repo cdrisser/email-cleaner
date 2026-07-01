@@ -26,8 +26,8 @@ export function EmailCleaner() {
 
   const {
     previewProgress, previewResult, previewOverrides,
-    autoProgress, autoResult, deletingPhase, unsubResult,
-    previewInbox, autoClean, togglePreviewSender, resetPreview, unsubscribeAll,
+    autoProgress, autoResult, deletingPhase, unsubResult, unsubPending,
+    previewInbox, autoClean, togglePreviewSender, resetPreview,
   } = useAutoClean(setPhase, setError);
 
   const showList = phase === "scanning" || phase === "reviewing" || phase === "done";
@@ -59,7 +59,7 @@ export function EmailCleaner() {
           autoProgress={autoProgress}
           deletingPhase={deletingPhase}
           unsubResult={unsubResult}
-          unsubscribeAll={unsubscribeAll}
+          unsubPending={unsubPending}
           onDone={() => { setPhase("idle"); }}
         />
       )}
@@ -68,7 +68,7 @@ export function EmailCleaner() {
         <IdleActions
           onScan={scan}
           onPreview={previewInbox}
-          onAutoClean={() => autoClean()}
+          onAutoClean={(unsub) => autoClean(undefined, unsub)}
           nukeConfirm={nukeConfirm}
           setNukeConfirm={setNukeConfirm}
           nuking={nuking}

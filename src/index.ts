@@ -2,9 +2,10 @@ import { serve } from "bun";
 import index from "./index.html";
 import { createEmailAgent, buildClassifyPrompt } from "./Agents/EmailAgent";
 import type { AgentStreamEvent } from "@strands-agents/sdk";
+import { ModelThrottledError } from "@strands-agents/sdk";
 import {
   fetchInboxEmails,
-  fetchEmailPage,
+  fetchEmailsForClean,
   deleteEmailsByUid,
   deleteByFrom,
   deleteByCategory,
@@ -13,8 +14,7 @@ import {
 import { buildUnsubscribeEntry, batchUnsubscribe, type UnsubscribeEntry } from "./lib/unsubscribe";
 
 const PAGE_SIZE = 100;
-const PAGE_CONCURRENCY = 5; // pages classified in parallel
-const AGENTS_PER_PAGE = 4; // AI agents per page (PAGE_SIZE / AGENTS_PER_PAGE emails each)
+const AGENTS_PER_PAGE = 4;
 
 function parseEmailResults(
   text: string
@@ -47,23 +47,44 @@ function parseEmailResults(
   return results;
 }
 
+function formatError(err: unknown): string {
+  if (err instanceof Error) {
+    const extra = (err as unknown as Record<string, unknown>).responseText;
+    return extra ? `${err.message}: ${extra}` : err.message;
+  }
+  return String(err);
+}
+
 async function classifyBatch(
   emails: Parameters<(typeof import("./Agents/EmailAgent"))["buildClassifyPrompt"]>[0]
 ) {
   if (emails.length === 0) return [];
   const { createEmailAgent, buildClassifyPrompt } = await import("./Agents/EmailAgent");
-  let text = "";
-  for await (const event of createEmailAgent().stream(
-    buildClassifyPrompt(emails)
-  ) as AsyncGenerator<AgentStreamEvent>) {
-    if (event.type === "modelStreamUpdateEvent") {
-      const inner = event.event;
-      if (inner.type === "modelContentBlockDeltaEvent" && inner.delta.type === "textDelta") {
-        text += inner.delta.text;
+  let delay = 2000;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      let text = "";
+      for await (const event of createEmailAgent().stream(
+        buildClassifyPrompt(emails)
+      ) as AsyncGenerator<AgentStreamEvent>) {
+        if (event.type === "modelStreamUpdateEvent") {
+          const inner = event.event;
+          if (inner.type === "modelContentBlockDeltaEvent" && inner.delta.type === "textDelta") {
+            text += inner.delta.text;
+          }
+        }
       }
+      return parseEmailResults(text);
+    } catch (err) {
+      if (err instanceof ModelThrottledError && attempt < 4) {
+        await new Promise(r => setTimeout(r, delay));
+        delay *= 2;
+        continue;
+      }
+      throw err;
     }
   }
-  return parseEmailResults(text);
+  return [];
 }
 
 const server = serve({
@@ -99,7 +120,7 @@ const server = serve({
                 }
                 send({ done: true });
               } catch (err) {
-                send({ error: String(err) });
+                send({ error: formatError(err) });
               } finally {
                 try {
                   controller.close();
@@ -209,7 +230,7 @@ const server = serve({
 
                 send({ done: true, preview: { toDelete, toKeep, scanned: emails.length, total } });
               } catch (err) {
-                send({ error: String(err) });
+                send({ error: formatError(err) });
               } finally {
                 clearInterval(heartbeat);
                 try {
@@ -233,10 +254,13 @@ const server = serve({
 
     "/api/email/auto-clean": {
       async POST(req) {
-        const { knownDecisions = {} } = (await req.json().catch(() => ({}))) as {
+        const { knownDecisions = {}, cursor } = (await req.json().catch(() => ({}))) as {
           knownDecisions?: Record<string, "keep" | "delete">;
+          cursor?: number;
         };
         const encoder = new TextEncoder();
+        const abort = new AbortController();
+        const { signal } = abort;
         const body = new ReadableStream({
           start(controller) {
             const send = (data: object) => {
@@ -253,60 +277,49 @@ const server = serve({
               }, 8000);
 
               try {
-                const { total } = await fetchInboxEmails(1);
-                let analyzed = 0;
+                const { emails, minUid } = await fetchEmailsForClean(PAGE_SIZE, cursor);
+                const cleanTotal = emails.length;
 
-                // "keep" is sticky once set
+                if (cleanTotal === 0) {
+                  send({ done: true, summary: { analyzed: 0, deleted: 0, minUid: null } });
+                  return;
+                }
+
                 const senderDecisions = new Map<string, "delete" | "keep">(
                   Object.entries(knownDecisions)
                 );
                 const overriddenSenders = new Set(Object.keys(knownDecisions));
 
-                const pageRanges: Array<[number, number]> = [];
-                for (let pageStart = 1; pageStart <= total; pageStart += PAGE_SIZE) {
-                  pageRanges.push([pageStart, Math.min(pageStart + PAGE_SIZE - 1, total)]);
+                // Classify in parallel sub-batches, streaming progress after each
+                const batchSize = Math.ceil(emails.length / AGENTS_PER_PAGE);
+                const slices = Array.from({ length: AGENTS_PER_PAGE }, (_, k) =>
+                  emails.slice(k * batchSize, (k + 1) * batchSize)
+                ).filter((s) => s.length > 0);
+
+                let analyzed = 0;
+                const allResults: Array<{ uid: number; from: string; recommendation: "keep" | "delete" }> = [];
+                for (const results of await Promise.all(slices.map(async (slice) => {
+                  const r = await classifyBatch(slice);
+                  analyzed += slice.length;
+                  send({ progress: { analyzed, total: cleanTotal } });
+                  return r;
+                }))) {
+                  allResults.push(...results);
                 }
 
-                // Collect all classified results so we can resolve delete UIDs after
-                // senderDecisions is final (keep is sticky, can flip delete→keep across pages).
-                const allResults: Array<{ uid: number; from: string }> = [];
+                if (signal.aborted) return;
 
-                for (let i = 0; i < pageRanges.length; i += PAGE_CONCURRENCY) {
-                  const chunk = pageRanges.slice(i, i + PAGE_CONCURRENCY);
-                  const chunkResults = await Promise.all(
-                    chunk.map(async ([start, end]) => {
-                      const { emails } = await fetchEmailPage(start, end);
-                      if (emails.length === 0)
-                        return { emailCount: 0, results: [] as ReturnType<typeof parseEmailResults> };
-                      const batchSize = Math.ceil(emails.length / AGENTS_PER_PAGE);
-                      const slices = Array.from({ length: AGENTS_PER_PAGE }, (_, k) =>
-                        emails.slice(k * batchSize, (k + 1) * batchSize)
-                      ).filter((s) => s.length > 0);
-                      const results = (await Promise.all(slices.map(classifyBatch))).flat();
-                      return { emailCount: emails.length, results };
-                    })
-                  );
-
-                  for (const { emailCount, results } of chunkResults) {
-                    analyzed += emailCount;
-                    allResults.push(...results.map((r) => ({ uid: r.uid, from: r.from })));
-                    for (const r of results) {
-                      if (overriddenSenders.has(r.from)) continue;
-                      if (senderDecisions.get(r.from) !== "keep") {
-                        senderDecisions.set(r.from, r.recommendation);
-                      }
-                    }
+                for (const r of allResults) {
+                  if (overriddenSenders.has(r.from)) continue;
+                  if (senderDecisions.get(r.from) !== "keep") {
+                    senderDecisions.set(r.from, r.recommendation);
                   }
-                  send({ progress: { analyzed, total, deleted: 0 } });
                 }
 
-                // Resolve delete UIDs now that senderDecisions is final
                 const deleteUids = allResults
                   .filter((r) => senderDecisions.get(r.from) === "delete")
                   .map((r) => r.uid);
 
-                // Use IMAP SEARCH to find which delete-bound emails have List-Unsubscribe headers,
-                // then fetch those headers. This is more reliable than fetching during classification.
                 const headerMap = await fetchUnsubscribeHeaders(deleteUids);
                 const seenUrls = new Set<string>();
                 const unsubscribeEntries: UnsubscribeEntry[] = [];
@@ -318,13 +331,15 @@ const server = serve({
                   }
                 }
 
+                if (signal.aborted) return;
+
                 send({ deletingPhase: { emailCount: deleteUids.length, unsubscribeEntries } });
 
                 const deleted = await deleteEmailsByUid(deleteUids);
 
-                send({ done: true, summary: { analyzed, deleted } });
+                send({ done: true, summary: { analyzed: cleanTotal, deleted, minUid } });
               } catch (err) {
-                send({ error: String(err) });
+                send({ error: formatError(err) });
               } finally {
                 clearInterval(heartbeat);
                 try {
@@ -332,6 +347,9 @@ const server = serve({
                 } catch {}
               }
             })();
+          },
+          cancel() {
+            abort.abort();
           },
         });
 

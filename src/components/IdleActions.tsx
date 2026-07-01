@@ -1,9 +1,10 @@
+import { useState } from "react";
 import "./IdleActions.css";
 
 interface Props {
   onScan: () => void;
   onPreview: () => void;
-  onAutoClean: () => void;
+  onAutoClean: (unsubscribe: boolean) => void;
   nukeConfirm: boolean;
   setNukeConfirm: (v: boolean) => void;
   nuking: boolean;
@@ -12,6 +13,8 @@ interface Props {
 }
 
 export function IdleActions({ onScan, onPreview, onAutoClean, nukeConfirm, setNukeConfirm, nuking, nukeResult, nuke }: Props) {
+  const [shouldUnsub, setShouldUnsub] = useState(true);
+
   return (
     <div className="idle-actions">
       <button onClick={onScan} className="scan-button">Scan Inbox</button>
@@ -43,9 +46,17 @@ export function IdleActions({ onScan, onPreview, onAutoClean, nukeConfirm, setNu
       <div className="auto-clean-section">
         <div className="auto-clean-row">
           <button onClick={onPreview} className="auto-clean-button">Preview Auto-Clean</button>
-          <button onClick={onAutoClean} className="auto-clean-button auto-clean-button-full">Run Auto-Clean</button>
+          <button onClick={() => onAutoClean(shouldUnsub)} className="auto-clean-button auto-clean-button-full">Run Auto-Clean</button>
+          <label className="unsub-checkbox-label">
+            <input
+              type="checkbox"
+              checked={shouldUnsub}
+              onChange={e => setShouldUnsub(e.target.checked)}
+            />
+            Unsubscribe too
+          </label>
         </div>
-        <p className="auto-clean-hint">Preview shows what would be deleted from a 200-email sample &middot; Run cleans the entire inbox</p>
+        <p className="auto-clean-hint">Preview shows what would be deleted from a 200-email sample &middot; Run cleans your 100 most recent emails</p>
       </div>
     </div>
   );

@@ -21,6 +21,8 @@ export function useAutoClean(
     unsubscribeEntries: UnsubscribeEntry[];
   } | null>(null);
   const [unsubResult, setUnsubResult] = useState<number | null>(null);
+  const [unsubPending, setUnsubPending] = useState(false);
+  const [cursor, setCursor] = useState<number | undefined>(undefined);
 
   const togglePreviewSender = (from: string, agentDecision: "keep" | "delete") => {
     const current = previewOverrides[from] ?? agentDecision;
@@ -89,7 +91,22 @@ export function useAutoClean(
     }
   };
 
-  const autoClean = async (knownDecisions?: Record<string, "keep" | "delete">) => {
+  const unsubscribeAll = async (entries: UnsubscribeEntry[]) => {
+    setUnsubPending(true);
+    try {
+      const res = await fetch("/api/email/unsubscribe-batch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entries }),
+      });
+      if (!res.ok) return;
+      const { sent } = await res.json();
+      setUnsubResult(sent);
+    } catch {}
+    setUnsubPending(false);
+  };
+
+  const autoClean = async (knownDecisions?: Record<string, "keep" | "delete">, autoUnsub = false) => {
     setPhase("auto-cleaning");
     setAutoProgress({ analyzed: 0, total: 0 });
     setAutoResult(null);
@@ -100,7 +117,7 @@ export function useAutoClean(
       const res = await fetch("/api/email/auto-clean", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ knownDecisions: knownDecisions ?? {} }),
+        body: JSON.stringify({ knownDecisions: knownDecisions ?? {}, cursor }),
       });
       if (!res.ok || !res.body) throw new Error(`Auto-clean failed: HTTP ${res.status}`);
 
@@ -122,7 +139,7 @@ export function useAutoClean(
             progress?: { analyzed: number; total: number };
             deletingPhase?: { emailCount: number; unsubscribeEntries: UnsubscribeEntry[] };
             done?: boolean;
-            summary?: { analyzed: number; deleted: number };
+            summary?: { analyzed: number; deleted: number; minUid: number | null };
             error?: string;
           };
           try {
@@ -137,9 +154,15 @@ export function useAutoClean(
             return;
           }
           if (msg.progress) setAutoProgress(msg.progress);
-          if (msg.deletingPhase) setDeletingPhase(msg.deletingPhase);
+          if (msg.deletingPhase) {
+            setDeletingPhase(msg.deletingPhase);
+            if (autoUnsub && msg.deletingPhase.unsubscribeEntries.length > 0) {
+              void unsubscribeAll(msg.deletingPhase.unsubscribeEntries);
+            }
+          }
           if (msg.done && msg.summary) {
-            setAutoResult(msg.summary);
+            setAutoResult({ analyzed: msg.summary.analyzed, deleted: msg.summary.deleted });
+            if (msg.summary.minUid != null) setCursor(msg.summary.minUid);
             return;
           }
         }
@@ -150,19 +173,6 @@ export function useAutoClean(
     }
   };
 
-  const unsubscribeAll = async (entries: UnsubscribeEntry[]) => {
-    try {
-      const res = await fetch("/api/email/unsubscribe-batch", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ entries }),
-      });
-      if (!res.ok) return;
-      const { sent } = await res.json();
-      setUnsubResult(sent);
-    } catch {}
-  };
-
   return {
     previewProgress,
     previewResult,
@@ -171,10 +181,10 @@ export function useAutoClean(
     autoResult,
     deletingPhase,
     unsubResult,
+    unsubPending,
     previewInbox,
     autoClean,
     togglePreviewSender,
     resetPreview,
-    unsubscribeAll,
   };
 }

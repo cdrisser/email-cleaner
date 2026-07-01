@@ -126,21 +126,8 @@ export async function fetchUnsubscribeHeaders(
     await client.connect();
     await client.mailboxOpen("INBOX");
 
-    // IMAP SEARCH for emails with a List-Unsubscribe header — same technique as deleteByCategory,
-    // proven reliable with Yahoo Mail. Intersect with our delete UIDs to avoid fetching headers
-    // for everything in the inbox.
-    const withUnsub = (await client.search(
-      { header: { "List-Unsubscribe": "" } },
-      { uid: true }
-    )) as number[];
-    const targetUids = uids.filter(uid => withUnsub.includes(uid));
-    if (targetUids.length === 0) return new Map();
-
     const result = new Map<number, { listUnsubscribe: string; listUnsubscribePost?: string }>();
-    for await (const msg of client.fetch(targetUids, {
-      uid: true,
-      headers: ["list-unsubscribe", "list-unsubscribe-post"],
-    })) {
+    for await (const msg of client.fetch(uids, { uid: true, headers: true }, { uid: true })) {
       const raw = msg.headers ? (msg.headers as Buffer).toString() : "";
       const listUnsubscribe = raw.match(/^list-unsubscribe:\s*(.+)$/im)?.[1]?.trim();
       if (listUnsubscribe) {
@@ -151,6 +138,58 @@ export async function fetchUnsubscribeHeaders(
       }
     }
     return result;
+  } finally {
+    await client.logout();
+  }
+}
+
+export async function fetchEmailsForClean(
+  limit: number,
+  beforeUid?: number
+): Promise<{ emails: EmailSummary[]; total: number; minUid: number | null }> {
+  const client = createImapClient();
+  try {
+    await client.connect();
+    const mailbox = await client.mailboxOpen("INBOX");
+    const total = mailbox.exists;
+
+    if (total === 0) return { emails: [], total: 0, minUid: null };
+
+    let targetUids: number[];
+
+    if (beforeUid === undefined) {
+      // First run: latest `limit` emails by sequence number
+      const start = Math.max(1, total - limit + 1);
+      const seqUids: number[] = [];
+      for await (const msg of client.fetch(`${start}:${total}`, { uid: true })) {
+        seqUids.push(msg.uid);
+      }
+      targetUids = seqUids.sort((a, b) => b - a).slice(0, limit);
+    } else {
+      // Subsequent runs: emails with UID strictly below the cursor (already-seen batch)
+      const raw = await client.search({ uid: `1:${beforeUid - 1}` }, { uid: true });
+      const uids: number[] = Array.isArray(raw) ? raw : [];
+      targetUids = uids.sort((a, b) => b - a).slice(0, limit);
+    }
+
+    if (targetUids.length === 0) return { emails: [], total, minUid: null };
+
+    const emails: EmailSummary[] = [];
+    for await (const msg of client.fetch(targetUids, { envelope: true, uid: true }, { uid: true })) {
+      const addr = msg.envelope?.from?.[0];
+      const from = addr
+        ? `${addr.name ? addr.name + " " : ""}<${addr.address ?? "unknown"}>`
+        : "unknown";
+      emails.push({
+        uid: msg.uid,
+        from,
+        subject: msg.envelope?.subject || "(no subject)",
+        date: msg.envelope?.date?.toISOString().split("T")[0] ?? "unknown",
+      });
+    }
+
+    const minUid = Math.min(...targetUids);
+    return { emails, total, minUid };
   } finally {
     await client.logout();
   }
